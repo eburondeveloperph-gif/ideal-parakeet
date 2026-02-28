@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw Architecture Flow</title>
+    <style>
+        :root {
+            /* Theme Colors */
+            --bg-color: #050505;
+            --container-bg: #0e1116;
+            --box-bg: #161b22;
+            --border-color: #30363d;
+            --text-main: #e6edf3;
+            --text-muted: #848d97;
+            
+            /* Component Accents */
+            --cyan: #2dd4bf;   /* Gateway */
+            --purple: #c084fc; /* Agent / ReAct Loop */
+            --orange: #fb923c; /* Memory */
+            --blue: #60a5fa;   /* LLM Provider */
+            --green: #4ade80;  /* Skills & Host */
+            --red: #f87171;    /* Warnings */
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            line-height: 1.5;
+        }
+
+        .architecture-container {
+            max-width: 900px;
+            width: 100%;
+            background-color: var(--container-bg);
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.2rem;
+            color: #fff;
+            letter-spacing: -0.5px;
+        }
+
+        .header h1 span {
+            background: linear-gradient(90deg, var(--cyan), var(--purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            margin: 0;
+            font-size: 1.05rem;
+        }
+
+        .flow-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* --- Box Base Styles --- */
+        .box {
+            background-color: var(--box-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            transition: transform 0.2s ease;
+        }
+
+        .box:hover {
+            transform: translateY(-2px);
+        }
+
+        .box h4 {
+            margin: 0 0 8px 0;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .box p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* --- Top Section: Inputs --- */
+        .group-container {
+            border: 1px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 30px 20px 20px 20px;
+            position: relative;
+            width: 100%;
+            max-width: 550px;
+        }
+
+        .group-label {
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: var(--container-bg);
+            padding: 0 10px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .row.inputs {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .row.inputs .box {
+            flex: 1;
+            text-align: center;
+        }
+
+        .row.inputs .box h4 {
+            justify-content: center;
+        }
+
+        /* --- Middle Sections --- */
+        .box.gateway {
+            width: 100%;
+            max-width: 550px;
+            border-top: 4px solid var(--cyan);
+            text-align: center;
+        }
+        .box.gateway h4 { justify-content: center; color: var(--cyan); }
+
+        .port-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(45, 212, 191, 0.1);
+            color: var(--cyan);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-family: monospace;
+            border: 1px solid rgba(45, 212, 191, 0.3);
+        }
+
+        /* --- Core Layer (Agent, Memory, LLM) --- */
+        .core-layer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 850px;
+        }
+
+        .box.memory { flex: 1; max-width: 240px; border-left: 4px solid var(--orange); }
+        .box.memory h4 { color: var(--orange); }
+
+        .box.llm { flex: 1; max-width: 240px; border-right: 4px solid var(--blue); }
+        .box.llm h4 { color: var(--blue); }
+
+        .box.agent {
+            flex: 1.2;
+            max-width: 280px;
+            text-align: center;
+            padding: 30px 20px;
+            border: 2px solid var(--purple);
+            z-index: 2;
+            background-color: #1a1025;
+            animation: pulse-glow 3s infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 10px rgba(192, 132, 252, 0.1); }
+            100% { box-shadow: 0 0 30px rgba(192, 132, 252, 0.3); }
+        }
+
+        .box.agent h4 { justify-content: center; color: var(--purple); margin-top: 10px; }
+
+        .cron-badge {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #eab308;
+            color: #422006;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            white-space: nowrap;
+            box-shadow: 0 0 10px rgba(234, 179, 8, 0.4);
+            border: 1px solid #facc15;
+            z-index: 10;
+        }
+
+        .react-loop-icon {
+            font-size: 2.5rem;
+            color: var(--purple);
+            display: inline-block;
+            animation: spin 4s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- File / List items inside boxes --- */
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .file-list span {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: monospace;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* --- Bottom Section: Skills --- */
+        .box.skills {
+            width: 100%;
+            max-width: 550px;
+            border-bottom: 4px solid var(--green);
+            text-align: center;
+        }
+        .box.skills h4 { justify-content: center; color: var(--green); }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .skill-item {
+            background: rgba(74, 222, 128, 0.05);
+            border: 1px solid rgba(74, 222, 128, 0.15);
+            color: #bbf7d0;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-family: monospace;
+        }
+
+        .warning {
+            margin-top: 15px;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--red);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- Animated Connectors --- */
+        .v-line {
+            width: 3px;
+            height: 40px;
+            margin: 0 auto;
+        }
+
+        .h-line {
+            width: 40px;
+            height: 3px;
+            flex-shrink: 0;
+        }
+
+        .cyan-line {
+            background: repeating-linear-gradient(180deg, var(--cyan) 0, var(--cyan) 6px, transparent 6px, transparent 12px);
+            background-size: 100% 12px;
+            animation: moveDown 1s linear infinite;
+        }
+
+        .green-line {
+            background: repeating-linear-gradient(180deg, var(--green) 0, var(--green) 6px, transparent 6px, transparent 12px);
+            background-size: 100% 12px;
+            animation: moveDown 1s linear infinite;
+        }
+
+        .orange-line {
+            background: repeating-linear-gradient(90deg, var(--orange) 0, var(--orange) 6px, transparent 6px, transparent 12px);
+            background-size: 12px 100%;
+            animation: moveLeft 1s linear infinite; /* Flows into Agent */
+        }
+
+        .blue-line {
+            background: repeating-linear-gradient(90deg, var(--blue) 0, var(--blue) 6px, transparent 6px, transparent 12px);
+            background-size: 12px 100%;
+            animation: moveRight 1s linear infinite; /* Flows to LLM */
+        }
+
+        @keyframes moveDown { from { background-position: 0 0; } to { background-position: 0 12px; } }
+        @keyframes moveLeft { from { background-position: 0 0; } to { background-position: -12px 0; } }
+        @keyframes moveRight { from { background-position: 0 0; } to { background-position: 12px 0; } }
+
+        /* --- Responsive Adjustments --- */
+        @media (max-width: 768px) {
+            .core-layer {
+                flex-direction: column;
+                gap: 0;
+            }
+            .h-line {
+                width: 3px;
+                height: 40px;
+            }
+            .orange-line {
+                background: repeating-linear-gradient(180deg, var(--orange) 0, var(--orange) 6px, transparent 6px, transparent 12px);
+                background-size: 100% 12px;
+                animation: moveDown 1s linear infinite;
+            }
+            .blue-line {
+                background: repeating-linear-gradient(180deg, var(--blue) 0, var(--blue) 6px, transparent 6px, transparent 12px);
+                background-size: 100% 12px;
+                animation: moveDown 1s linear infinite;
+            }
+            .box.memory, .box.agent, .box.llm {
+                max-width: 100%;
+            }
+            .row.inputs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="architecture-container">
+        <div class="header">
+            <h1>OpenClaw <span>Architecture</span></h1>
+            <p>The "Agentic OS" that bridges LLMs with direct local execution.</p>
+        </div>
+
+        <div class="flow-chart">
+            
+            <!-- Step 1: User Interfaces -->
+            <div class="group-container">
+                <div class="group-label">User Interfaces & Clients</div>
+                <div class="row inputs">
+                    <div class="box">
+                        <h4>💬 Messaging Apps</h4>
+                        <p>WhatsApp, Telegram, Slack, Signal, iMessage</p>
+                    </div>
+                    <div class="box">
+                        <h4>🖥️ Control Clients</h4>
+                        <p>CLI, macOS App, Web Canvas Dashboard</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="v-line cyan-line"></div>
+
+            <!-- Step 2: The Gateway -->
+            <div class="box gateway">
+                <div class="port-badge">TCP :18789</div>
+                <h4>🖧 The Gateway (Node.js Daemon)</h4>
+                <p>A long-lived local WebSocket server acting as the control plane. It brokers messaging connections, validates JSON Schema frames, handles session routing, and emits system events.</p>
+            </div>
+
+            <div class="v-line cyan-line"></div>
+
+            <!-- Step 3: The Core Agent Engine -->
+            <div class="core-layer">
+                
+                <!-- Persistent Memory Side -->
+                <div class="box memory">
+                    <h4>💾 Local Memory</h4>
+                    <p>File-system based context.</p>
+                    <div class="file-list">
+                        <span>📄 ~/clawd/soul.md</span>
+                        <span>📂 Markdown History</span>
+                        <span>🔍 Vector Search DB</span>
+                    </div>
+                </div>
+
+                <!-- Connector -->
+                <div class="h-line orange-line"></div>
+
+                <!-- Central Engine -->
+                <div class="box agent">
+                    <div class="cron-badge">⏱️ Proactive Heartbeat (Cron)</div>
+                    <div class="react-loop-icon">↻</div>
+                    <h4>🧠 Agent Runtime</h4>
+                    <p>The ReAct (Reason & Act) Orchestrator. Evaluates inputs, pulls memory context, prompts the LLM, and dispatches real-world actions.</p>
+                </div>
+
+                <!-- Connector -->
+                <div class="h-line blue-line"></div>
+
+                <!-- LLM Side -->
+                <div class="box llm">
+                    <h4>⚡ Unified LLM API</h4>
+                    <p>Model-agnostic intelligence.</p>
+                    <div class="file-list">
+                        <span>☁️ Anthropic (Claude)</span>
+                        <span>☁️ OpenAI (GPT)</span>
+                        <span>🖥️ Local (LM Studio)</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="v-line green-line"></div>
+
+            <!-- Step 4: Execution / Skills -->
+            <div class="box skills">
+                <h4>🛠️ Skills & Execution Engine</h4>
+                <p>The agent operates tools dynamically based on LLM outputs.</p>
+                <div class="skills-grid">
+                    <div class="skill-item">💻 System Shell & Exec</div>
+                    <div class="skill-item">🌐 Browser Automation</div>
+                    <div class="skill-item">📂 Host File System</div>
+                    <div class="skill-item">🔌 Webhooks & Scripts</div>
+                </div>
+                <div class="warning">⚠️ Warning: Agent operates directly on host metal</div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
